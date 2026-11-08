@@ -24,7 +24,6 @@ Depends:
  python3,
  python3-gi,
  python3-qrcode,
- python3-pil,
  gir1.2-gtk-4.0,
  gir1.2-adw-1,
  network-manager,

@@ -41,7 +41,7 @@ dependencies = []
 
 [project.optional-dependencies]
 # The GUI also needs PyGObject + GTK4 + libadwaita from the distribution.
-gui = ["qrcode[pil]>=7.4"]  # distro packages: Ubuntu 22.04 ships 7.3
+gui = ["qrcode>=7.4"]  # distro packages: Ubuntu 22.04 ships 7.3
 # Wi-Fi Direct hotspots on distributions whose wpa_supplicant has no control
 # socket (Fedora, openSUSE, Alpine, Void): twinfi talks to it over D-Bus.
 p2p = ["jeepney>=0.7"]

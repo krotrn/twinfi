@@ -133,7 +133,7 @@ install_arch() {
         as_root pacman -R --noconfirm apsta
     fi
     set -- twinfi hostapd dnsmasq
-    want_gui && set -- "$@" python-gobject gtk4 libadwaita python-qrcode python-pillow
+    want_gui && set -- "$@" python-gobject gtk4 libadwaita python-qrcode
     as_root pacman -Sy --needed --noconfirm "$@"
 }
 
@@ -172,29 +172,29 @@ source_deps() {  # source_deps <family>: install.sh's dependencies from the dist
     case $1 in
         arch)
             set -- "python networkmanager iw iproute2" "hostapd dnsmasq python-jeepney" \
-                "python-gobject gtk4 libadwaita python-qrcode python-pillow" pacman -Sy --needed --noconfirm
+                "python-gobject gtk4 libadwaita python-qrcode" pacman -Sy --needed --noconfirm
             ;;
         ubuntu | debian)
             as_root apt-get update
             set -- "python3 network-manager iw iproute2" "hostapd dnsmasq python3-jeepney" \
-                "python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 python3-qrcode python3-pil" apt-get install -y
+                "python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 python3-qrcode" apt-get install -y
             ;;
         fedora)
             set -- "python3 NetworkManager iw iproute" "hostapd dnsmasq python3-jeepney" \
-                "python3-gobject gtk4 libadwaita python3-qrcode python3-pillow" dnf install -y
+                "python3-gobject gtk4 libadwaita python3-qrcode" dnf install -y
             ;;
         suse)
             set -- "python3 NetworkManager iw iproute2" "hostapd dnsmasq python3-jeepney" \
-                "python3-gobject python3-gobject-Gdk typelib-1_0-Gtk-4_0 typelib-1_0-Adw-1 python3-qrcode python3-Pillow" \
+                "python3-gobject python3-gobject-Gdk typelib-1_0-Gtk-4_0 typelib-1_0-Adw-1 python3-qrcode" \
                 zypper --non-interactive install
             ;;
         alpine)
             set -- "bash python3 networkmanager iw iproute2" "hostapd dnsmasq py3-jeepney" \
-                "py3-gobject3 gtk4.0 libadwaita py3-qrcode py3-pillow" apk add
+                "py3-gobject3 gtk4.0 libadwaita py3-qrcode" apk add
             ;;
         void)
             set -- "bash python3 NetworkManager iw iproute2" "hostapd dnsmasq python3-jeepney" \
-                "python3-gobject gtk4 libadwaita python3-qrcode python3-Pillow" xbps-install -Sy
+                "python3-gobject gtk4 libadwaita python3-qrcode" xbps-install -Sy
             ;;
         *)
             say "!" "Unknown distribution: install NetworkManager, iw, iproute2, hostapd and"

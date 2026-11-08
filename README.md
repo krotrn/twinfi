@@ -289,11 +289,11 @@ polkit. It's remembered for a few minutes, so you aren't asked on every click.
 **Requirements.** The packages above install everything. From source, install
 your distribution's GTK bindings:
 
-| Distribution           | Packages                                                                              |
-| ---------------------- | ------------------------------------------------------------------------------------- |
-| Ubuntu / Debian / Mint | `python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 python3-qrcode python3-pil`                   |
-| Fedora                 | `python3-gobject gobject-introspection gtk4 libadwaita python3-qrcode python3-pillow`  |
-| Arch                   | `python-gobject gtk4 libadwaita python-qrcode python-pillow`                           |
+| Distribution           | Packages                                                               |
+| ---------------------- | ---------------------------------------------------------------------- |
+| Ubuntu / Debian / Mint | `python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 python3-qrcode`                |
+| Fedora                 | `python3-gobject gobject-introspection gtk4 libadwaita python3-qrcode` |
+| Arch                   | `python-gobject gtk4 libadwaita python-qrcode`                         |
 
 It works with libadwaita 1.1 / GTK 4.6 and newer, and uses newer libadwaita
 features when your system has them. CI checks it on Ubuntu 22.04, Debian 12,
