@@ -1,9 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <style id="current-color-scheme" type="text/css">.ColorScheme-Text { color:#2e3436; }</style>
   <!-- broadcast arcs and the share arrow from the app icon's badge -->
-  <g fill="none" stroke="#2e3436" stroke-linecap="round" stroke-width="1.5">
-    <path d="M1 9.2a7 7 0 0 1 9.8 0"/>
-    <path d="M3 11.4a4 4 0 0 1 5.8 0"/>
-  </g>
-  <circle cx="5.9" cy="14" r="1.3" fill="#2e3436"/>
-  <path d="M9.5 4.5h5m-2-2.2 2.2 2.2-2.2 2.2" fill="none" stroke="#2e3436" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="ColorScheme-Text" fill="currentColor" d="M0.48 8.61A7.75 7.75 0 0 1 11.32 8.61A0.75 0.75 0 0 1 10.27 9.68A6.25 6.25 0 0 0 1.53 9.68A0.75 0.75 0 0 1 0.48 8.61Z"/>
+  <path class="ColorScheme-Text" fill="currentColor" d="M2.45 10.88A4.75 4.75 0 0 1 9.35 10.88A0.75 0.75 0 0 1 8.26 11.91A3.25 3.25 0 0 0 3.54 11.91A0.75 0.75 0 0 1 2.45 10.88Z"/>
+  <circle class="ColorScheme-Text" fill="currentColor" cx="5.9" cy="14" r="1.3"/>
+  <path class="ColorScheme-Text" fill="currentColor" d="M9.5 5.25L14.2 5.25A0.75 0.75 0 0 0 14.2 3.75L9.5 3.75A0.75 0.75 0 0 0 9.5 5.25Z"/>
+  <path class="ColorScheme-Text" fill="currentColor" d="M11.97 2.83L14.17 5.03A0.75 0.75 0 0 0 15.23 3.97L13.03 1.77A0.75 0.75 0 0 0 11.97 2.83Z"/>
+  <path class="ColorScheme-Text" fill="currentColor" d="M14.17 3.97L11.97 6.17A0.75 0.75 0 0 0 13.03 7.23L15.23 5.03A0.75 0.75 0 0 0 14.17 3.97Z"/>
 </svg>
