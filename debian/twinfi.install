@@ -4,4 +4,6 @@ twinfi_cli/data/com.github.twinfi.policy usr/share/polkit-1/actions/
 twinfi_gui/data/com.github.twinfi.Gtk.desktop usr/share/applications/
 twinfi_gui/data/icons/hicolor/scalable/apps/com.github.twinfi.Gtk.svg usr/share/icons/hicolor/scalable/apps/
 twinfi_gui/data/icons/hicolor/symbolic/apps/com.github.twinfi.Gtk-symbolic.svg usr/share/icons/hicolor/symbolic/apps/
+twinfi_gui/data/icons/hicolor/symbolic/apps/com.github.twinfi.Gtk-off-symbolic.svg usr/share/icons/hicolor/symbolic/apps/
+twinfi_gui/data/icons/hicolor/symbolic/apps/com.github.twinfi.Gtk-error-symbolic.svg usr/share/icons/hicolor/symbolic/apps/
 twinfi_gui/data/com.github.twinfi.Gtk.metainfo.xml usr/share/metainfo/
