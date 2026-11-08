@@ -54,7 +54,7 @@ class HelperTests(unittest.TestCase):
         }
         icon, title, body, items = helpers.tray_state(data)
         self.assertEqual(
-            (icon, title, body), ("network-wireless-hotspot-symbolic", "Hotspot is on", "S · 0 devices connected")
+            (icon, title, body), ("com.github.twinfi.Gtk-symbolic", "Hotspot is on", "S · 0 devices connected")
         )
         menu = self.menu(items)
         self.assertEqual((menu["toggle"].label, menu["toggle"].enabled), ("Stop Hotspot", True))
@@ -75,6 +75,45 @@ class HelperTests(unittest.TestCase):
         self.assertFalse(menu["autostart"].visible)  # unknown init system
         self.assertTrue(self.menu(helpers.tray_state(off)[3])["band:a"].enabled)
         self.assertFalse(self.menu(helpers.tray_state({})[3])["toggle"].enabled)
+
+    def test_tray_icon_is_the_apps_own_not_a_wifi_status_icon(self):
+        # A theme Wi-Fi icon in the tray looks like the network applet's.
+        on = helpers.tray_state({"hotspot": {"ssid": "S"}})[0]
+        off = helpers.tray_state({"hotspot": None, "config": {}})[0]
+        self.assertEqual(on, "com.github.twinfi.Gtk-symbolic")
+        self.assertEqual(off, "com.github.twinfi.Gtk-off-symbolic")
+        self.assertEqual(helpers.tray_state({})[0], off)
+        for name in (on, off):
+            self.assertTrue((GUI_DIR / "data/icons/hicolor/symbolic/apps" / f"{name}.svg").is_file(), name)
+
+    def test_tray_status(self):
+        on, off = {"hotspot": {"ssid": "S"}}, {"hotspot": None, "config": {}}
+        self.assertEqual(helpers.tray_status(off), "Active")  # shown unless asked otherwise
+        self.assertEqual(helpers.tray_status(off, hide_when_off=True), "Passive")
+        self.assertEqual(helpers.tray_status(on, hide_when_off=True), "Active")
+        self.assertEqual(helpers.tray_status(off, busy=True, hide_when_off=True), "Active")
+        self.assertEqual(helpers.tray_status({}, hide_when_off=True), "Active")  # status unknown: stay visible
+
+    def test_gui_prefs(self):
+        self.assertEqual(helpers.gui_prefs_path({"XDG_CONFIG_HOME": "/cfg"}), Path("/cfg/twinfi/gui.json"))
+        self.assertEqual(helpers.gui_prefs_path({"HOME": "/h"}), Path("/h/.config/twinfi/gui.json"))
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "twinfi" / "gui.json"
+            self.assertEqual(helpers.load_gui_prefs(path), {})
+            helpers.save_gui_prefs({"tray_hide_when_off": True}, path)
+            self.assertEqual(helpers.load_gui_prefs(path), {"tray_hide_when_off": True})
+            path.write_text("{not json")
+            self.assertEqual(helpers.load_gui_prefs(path), {})
+            path.write_text("[1]")
+            self.assertEqual(helpers.load_gui_prefs(path), {})
+
+    def test_packages_install_every_bundled_icon(self):
+        root = GUI_DIR.parent
+        icons = sorted((GUI_DIR / "data/icons/hicolor").glob("*/apps/*.svg"))
+        for packaging in ("debian/twinfi.install", "packaging/arch/PKGBUILD"):
+            text = (root / packaging).read_text()
+            for icon in icons:
+                self.assertIn(str(icon.relative_to(root)), text, packaging)
 
     def test_band_change_resets_a_channel_the_band_lacks(self):
         self.assertEqual(helpers.band_change({"channel": "6"}, "a"), {"band": "a", "channel": "auto"})
