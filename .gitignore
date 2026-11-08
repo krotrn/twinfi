@@ -44,6 +44,6 @@ coverage.xml
 htmlcov/
 gui-screenshots/
 
-# Documentation website (scripts/build_site.py, mkdocs build)
+# Documentation website (scripts/build_site.py, zensical build)
 site-src/
 site/

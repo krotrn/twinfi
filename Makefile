@@ -53,10 +53,10 @@ gui:
 gui-smoke:
 	G_DEBUG=fatal-criticals $(PYTHON) scripts/gui_smoke.py gui-screenshots
 
-# Serves the documentation website at http://127.0.0.1:8000 (needs mkdocs-material).
+# Serves the documentation website at http://127.0.0.1:8000 (needs zensical).
 site:
 	$(PYTHON) scripts/build_site.py
-	mkdocs serve
+	zensical serve
 
 clean:
 	rm -rf build dist *.egg-info .coverage coverage.xml gui-screenshots site-src site

@@ -19,7 +19,7 @@
   <meta property="og:url" content="{{ page.canonical_url }}">
   <meta property="og:image" content="https://raw.githubusercontent.com/krotrn/twinfi/main/docs/screenshots/hotspot.png">
   <meta name="twitter:card" content="summary_large_image">
-  {% if page.is_homepage %}
+  {% if page.url == "" %}
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",

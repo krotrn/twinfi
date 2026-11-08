@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Stage the documentation website in site-src/ for `mkdocs build`.
+"""Stage the documentation website in site-src/ for `zensical build`.
 
 The README becomes the home page and docs/*.md the other pages. Each page
 gets a search-friendly title and description as front matter here, so the
 files on GitHub stay plain markdown.
 
-    scripts/build_site.py && mkdocs build
+    scripts/build_site.py && zensical build
 """
 
 import re
