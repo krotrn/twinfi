@@ -263,6 +263,16 @@ owns `org.kde.StatusNotifierItem-<pid>-1`, exports the item at
 whenever one appears on the session bus. The menu is described by
 `helpers.tray_state(data, busy)` (pure, unit-tested) and refreshed with the
 window's 5-second status, so the tray is just another view of the same data.
+The icon is the app's own (`com.github.twinfi.Gtk-symbolic`, with `-off-` and
+`-error-` variants) rather than a theme Wi-Fi icon, which would look like the
+network applet's. The SVGs are filled outlines in `currentColor` under a
+`current-color-scheme` stylesheet, so both GTK and Plasma's KIconLoader
+recolour them to the panel's text colour; `IconThemePath` points at the
+bundled copies for runs from source. `helpers.tray_status` reports
+`Passive` while the hotspot is off if the user turned on *Hide tray icon
+while the hotspot is off* (stored per user in `$XDG_CONFIG_HOME/twinfi/gui.json`),
+which lets the panel hide the item; it stays `Active` while busy or when the
+status is unknown.
 Menu clicks go through the same `run_privileged` path as the window's
 buttons. With no tray on the bus nothing is registered, and closing the
 window quits as before; if the tray goes away while the window is hidden,

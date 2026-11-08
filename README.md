@@ -259,12 +259,24 @@ and follows your light/dark preference. Shortcuts: <kbd>Ctrl</kbd>+<kbd>R</kbd>
 or <kbd>F5</kbd> refresh, <kbd>Ctrl</kbd>+<kbd>Q</kbd> quit.
 
 **System tray.** While the app runs, an icon in the panel shows whether the
-hotspot is on and how many devices are connected. Right-click it to start or
+hotspot is on (faded and struck through when it's off, with a "!" when
+twinfi can't report its status) and, in its tooltip, how many devices are
+connected. Right-click it to start or
 stop the hotspot, share it, open the device list, switch profile or band, turn
 *Start automatically* on or off, or open Settings. Clicking the icon shows or
 hides the window, and closing the window keeps the app in the tray. Turn on
-*Show in the tray at login* in Settings (or run `twinfi-gtk --background`) to
-start straight into the tray. It works wherever the panel supports
+*Hide tray icon while the hotspot is off* to let the panel tuck it away until
+the hotspot starts (KDE Plasma moves it into the hidden icons; waybar and some
+other bars hide it completely).
+
+The icon belongs to the desktop app, not to the hotspot service, so it is
+there only while `twinfi-gtk` runs. Turn on *Show in the tray at login* in
+Settings (or run `twinfi-gtk --background`) to start straight into the tray.
+That setting adds an XDG autostart entry, which desktops such as KDE Plasma,
+GNOME and Xfce run at login. Window managers usually don't: on Hyprland (unless
+started through uwsm), Sway or i3, start it from your config instead, e.g.
+`exec-once = twinfi-gtk --background` in `hyprland.conf` or
+`exec twinfi-gtk --background` for Sway and i3. It works wherever the panel supports
 StatusNotifierItem: KDE Plasma, Xfce, Cinnamon, MATE, Budgie, LXQt, waybar and
 other Wayland bars, and GNOME with the AppIndicator extension (included in
 Ubuntu). Bars that only support the old XEmbed tray, such as i3bar and polybar,
@@ -374,8 +386,16 @@ language, with the common problems and fixes. For the design, see
 - Settings changes apply to the next start; stop and start the hotspot.
 - *No tray icon*: your panel needs StatusNotifierItem support. On GNOME,
   install and turn on the *AppIndicator and KStatusNotifierItem Support*
-  extension; on i3bar or polybar, run `snixembed`. Without a tray the app
-  still works, it just quits when you close the window.
+  extension; on i3bar or polybar, run `snixembed`. Window managers such as
+  Hyprland and Sway have no tray of their own: use a bar with one (waybar's
+  `tray` module). Without a tray the app still works, it just quits when you
+  close the window.
+- *No tray icon after login*: *Show in the tray at login* uses an XDG
+  autostart entry, which window managers usually ignore. Start
+  `twinfi-gtk --background` from your window manager's config.
+- *Tray icon hidden while the hotspot is off*: *Hide tray icon while the
+  hotspot is off* is on. Turn it off in Settings if your bar hides the icon
+  completely.
 
 If your card can't do AP+STA, `twinfi recommend` suggests USB adapters with
 in-kernel drivers that can (MediaTek mt7921au, mt7612u, mt7610u, mt7925u).
