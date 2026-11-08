@@ -23,6 +23,14 @@ All notable changes to this project are documented here. The format follows
 - The tray icon follows the panel's text colour on KDE Plasma. On a dark
   panel it was drawn dark grey and was hard to see.
 
+### Changed
+
+- The desktop app no longer needs Pillow. The share dialog draws its QR code
+  directly from python-qrcode, so the packages, `get.sh` and the `gui` extra
+  drop `python3-pil` / `python-pillow`. This also ends the Pillow security
+  advisories against the locked development dependencies: no fixed Pillow
+  supports Python 3.10, which twinfi still runs on (Ubuntu 22.04).
+
 ## [0.13.2] - 2026-10-14
 
 ### Fixed

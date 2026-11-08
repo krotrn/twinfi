@@ -132,47 +132,47 @@ jobs:
             image: ubuntu:22.04
             install: >-
               apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends
-              python3 python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 libgtk-4-bin python3-qrcode python3-pil
+              python3 python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 libgtk-4-bin python3-qrcode
               dbus adwaita-icon-theme librsvg2-common xvfb imagemagick
           - name: Debian 12 (libadwaita 1.2)
             slug: debian-12
             image: debian:12
             install: >-
               apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends
-              python3 python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 libgtk-4-bin python3-qrcode python3-pil
+              python3 python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 libgtk-4-bin python3-qrcode
               dbus adwaita-icon-theme librsvg2-common
           - name: Ubuntu 24.04 (libadwaita 1.5)
             slug: ubuntu-24.04
             image: ubuntu:24.04
             install: >-
               apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends
-              python3 python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 libgtk-4-bin python3-qrcode python3-pil
+              python3 python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 libgtk-4-bin python3-qrcode
               dbus adwaita-icon-theme librsvg2-common
           - name: Debian 13
             slug: debian-13
             image: debian:13
             install: >-
               apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends
-              python3 python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 libgtk-4-bin python3-qrcode python3-pil
+              python3 python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 libgtk-4-bin python3-qrcode
               dbus adwaita-icon-theme librsvg2-common
           - name: Ubuntu 26.04
             slug: ubuntu-26.04
             image: ubuntu:26.04
             install: >-
               apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends
-              python3 python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 libgtk-4-bin python3-qrcode python3-pil
+              python3 python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 libgtk-4-bin python3-qrcode
               dbus adwaita-icon-theme librsvg2-common
           - name: Fedora (latest)
             slug: fedora
             image: fedora:latest
             install: >-
               dnf install -y python3 python3-gobject gobject-introspection gtk4 libadwaita python3-qrcode
-              python3-pillow dbus-daemon dbus-tools adwaita-icon-theme /usr/bin/gtk4-broadwayd
+              dbus-daemon dbus-tools adwaita-icon-theme /usr/bin/gtk4-broadwayd
           - name: Arch Linux (latest)
             slug: arch
             image: archlinux:latest
             install: >-
-              pacman -Syu --noconfirm python python-gobject gtk4 libadwaita python-qrcode python-pillow
+              pacman -Syu --noconfirm python python-gobject gtk4 libadwaita python-qrcode
               dbus adwaita-icon-theme
     steps:
       - name: Install GTK and libadwaita

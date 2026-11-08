@@ -2,26 +2,19 @@
 
 from __future__ import annotations
 
-import io
-
 from gi.repository import Adw, Gdk, GLib, Gtk
 
 from .compat import Dialog, copy_to_clipboard
-from .helpers import wifi_share_string
+from .helpers import qr_pixels, wifi_share_string
 
 
 def qr_texture(payload: str):
     """A Gdk.Texture of the QR code, or None if the qrcode module is missing."""
-    try:
-        import qrcode
-    except ImportError:
+    drawn = qr_pixels(payload)
+    if drawn is None:
         return None
-    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=10, border=2)
-    qr.add_data(payload)
-    qr.make(fit=True)
-    buf = io.BytesIO()
-    qr.make_image(fill_color="black", back_color="white").save(buf, format="PNG")
-    return Gdk.Texture.new_from_bytes(GLib.Bytes.new(buf.getvalue()))
+    side, rgb = drawn
+    return Gdk.MemoryTexture.new(side, side, Gdk.MemoryFormat.R8G8B8, GLib.Bytes.new(rgb), side * 3)
 
 
 class ShareDialog:

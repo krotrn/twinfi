@@ -6,7 +6,7 @@ import json
 import os
 import shutil
 from pathlib import Path
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, Tuple
 
 APP_ID = "com.github.twinfi.Gtk"
 # The tray shows the app's own icon: theme Wi-Fi icons look like the network applet's.
@@ -54,6 +54,24 @@ def wifi_share_string(ssid: str, password: str, hidden: bool = False) -> str:
         return ""
     tail = "H:true;" if hidden else ""
     return f"WIFI:T:WPA;S:{escape_wifi_field(ssid)};P:{escape_wifi_field(password)};{tail};"
+
+
+def qr_pixels(payload: str, scale: int = 10, border: int = 2) -> Optional[Tuple[int, bytes]]:
+    """(side, RGB bytes) of a square QR code image, or None if the qrcode module is missing.
+
+    Drawn straight from qrcode's module matrix, so no imaging library is needed.
+    """
+    try:
+        import qrcode
+    except ImportError:
+        return None
+    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=border)
+    qr.add_data(payload)
+    qr.make(fit=True)
+    matrix = qr.get_matrix()  # border included
+    dark, light = b"\x00\x00\x00" * scale, b"\xff\xff\xff" * scale
+    rgb = b"".join(b"".join(dark if module else light for module in row) * scale for row in matrix)
+    return len(matrix) * scale, rgb
 
 
 def band_label(band: Optional[str]) -> str:

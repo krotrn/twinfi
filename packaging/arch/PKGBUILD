@@ -25,7 +25,6 @@ optdepends=(
   'libadwaita: twinfi-gtk GUI'
   'polkit: privileged actions from twinfi-gtk'
   'python-qrcode: QR codes in twinfi-gtk'
-  'python-pillow: QR codes in twinfi-gtk'
   'python-jeepney: Wi-Fi Direct hotspot when wpa_supplicant has no control socket'
 )
 # twinfi was called apsta until 0.13 (and installs an `apsta` alias).
