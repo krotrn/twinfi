@@ -3,10 +3,13 @@
 import json
 import re
 import subprocess
+import sys
 import tempfile
+import types
 import unittest
 import unittest.mock as mock
 from pathlib import Path
+from types import SimpleNamespace
 
 from twinfi_gui import backend, helpers
 
@@ -107,6 +110,57 @@ class HelperTests(unittest.TestCase):
                 self.assertIsNone(shape.get("stroke"), (name, shape.attrib))  # outlines only: fills recolour everywhere
             outside = path.read_text().replace(styles[0].text or "", "")
             self.assertNotRegex(outside, r"#[0-9a-fA-F]{3,6}\b", name)
+
+    def fake_qrcode(self, matrix):
+        """A qrcode module whose codes are ``matrix``; records the data it was given."""
+        module = types.ModuleType("qrcode")
+        module.constants = SimpleNamespace(ERROR_CORRECT_M=0)
+        seen = module.seen = []
+
+        class QRCode:
+            def __init__(self, **kwargs):
+                pass
+
+            def add_data(self, data):
+                seen.append(data)
+
+            def make(self, fit):
+                pass
+
+            def get_matrix(self):
+                return matrix
+
+        module.QRCode = QRCode
+        return module
+
+    def test_qr_pixels_draw_the_modules_without_pillow(self):
+        fake = self.fake_qrcode([[True, False], [False, True]])
+        with mock.patch.dict(sys.modules, {"qrcode": fake, "PIL": None, "PIL.Image": None}):
+            size, rgb = helpers.qr_pixels("WIFI:S:N;;", scale=3)
+        self.assertEqual(fake.seen, ["WIFI:S:N;;"])
+        self.assertEqual((size, len(rgb)), (6, 6 * 6 * 3))
+
+        def pixel(x, y):
+            return rgb[(y * size + x) * 3 : (y * size + x) * 3 + 3]
+
+        black, white = b"\x00\x00\x00", b"\xff\xff\xff"
+        self.assertEqual([pixel(0, 0), pixel(2, 2), pixel(3, 3), pixel(5, 5)], [black] * 4)
+        self.assertEqual([pixel(3, 0), pixel(5, 2), pixel(0, 3), pixel(2, 5)], [white] * 4)
+
+    def test_qr_pixels_without_qrcode(self):
+        with mock.patch.dict(sys.modules, {"qrcode": None}):
+            self.assertIsNone(helpers.qr_pixels("x"))
+
+    def test_nothing_pulls_in_pillow(self):
+        # QR codes are drawn from qrcode's matrix; Pillow is no longer needed.
+        root = GUI_DIR.parent
+        pyproject, lock = root / "pyproject.toml", root / "uv.lock"
+        if not (pyproject.is_file() and lock.is_file()):
+            self.skipTest("pyproject.toml and uv.lock are not part of this tree")
+        gui_extra = re.search(r"^gui = \[(.*)\]", pyproject.read_text(), re.M)
+        self.assertIsNotNone(gui_extra)
+        self.assertNotIn("pil", gui_extra.group(1).lower())
+        self.assertNotRegex(lock.read_text(), r'name = "pillow"')
 
     def test_tray_status(self):
         on, off = {"hotspot": {"ssid": "S"}}, {"hotspot": None, "config": {}}

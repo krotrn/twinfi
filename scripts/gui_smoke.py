@@ -284,6 +284,51 @@ def check_tray_icons() -> None:
     host.close()
 
 
+def check_qr_without_pillow() -> None:
+    """The share dialog's QR code draws from qrcode's matrix; Pillow isn't needed."""
+    try:
+        import qrcode
+    except ImportError:
+        print("note: python qrcode is not installed; QR check skipped")
+        return
+    from twinfi_gui import share
+
+    payload = "WIFI:T:WPA;S:Smoke Test;P:kd7Ws3qPzT9mXbR2;;"
+    blocked = ("PIL", "PIL.Image", "qrcode.image.pil")
+    saved = {name: sys.modules.get(name) for name in blocked}
+    sys.modules.update(dict.fromkeys(blocked))  # None: any import of them fails
+    try:
+        texture = share.qr_texture(payload)
+    finally:
+        for name, module in saved.items():
+            if module is None:
+                sys.modules.pop(name, None)
+            else:
+                sys.modules[name] = module
+    assert texture is not None, "no QR code without Pillow"
+
+    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=2)
+    qr.add_data(payload)
+    qr.make(fit=True)
+    matrix = qr.get_matrix()
+    scale = texture.get_width() // len(matrix)
+    assert scale > 0 and texture.get_width() == texture.get_height() == len(matrix) * scale, texture.get_width()
+
+    gi.require_version("GdkPixbuf", "2.0")
+    from gi.repository import GdkPixbuf
+
+    loader = GdkPixbuf.PixbufLoader.new_with_type("png")
+    loader.write(texture.save_to_png_bytes().get_data())
+    loader.close()
+    pixbuf = loader.get_pixbuf()
+    pixels, stride, step = pixbuf.get_pixels(), pixbuf.get_rowstride(), pixbuf.get_n_channels()
+    for y, row in enumerate(matrix):
+        for x, dark in enumerate(row):
+            cx, cy = x * scale + scale // 2, y * scale + scale // 2
+            red = pixels[cy * stride + cx * step]
+            assert (red < 64) == dark, f"module ({x}, {y}) drawn {'light' if dark else 'dark'}"
+
+
 def check_tray(app: Adw.Application) -> None:
     """The tray icon registers, its menu drives the window, and closing hides to it."""
     bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
@@ -460,6 +505,8 @@ def run(app: Adw.Application, out: Path) -> None:
     check_tray(app)
     print("tray icons", flush=True)
     check_tray_icons()
+    print("QR code without Pillow", flush=True)
+    check_qr_without_pillow()
 
     missing = MissingTwinfiWindow(app, "/usr/bin/twinfi")
     missing.present()
