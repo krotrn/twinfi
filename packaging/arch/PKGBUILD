@@ -1,6 +1,6 @@
 # Maintainer: krotrn <krotrn.ks@gmail.com>
 pkgname=twinfi
-pkgver=0.13.2
+pkgver=0.13.3
 pkgrel=1
 pkgdesc="Run a Wi-Fi hotspot while staying connected to Wi-Fi (AP+STA)"
 arch=('any')
