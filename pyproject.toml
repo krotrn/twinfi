@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "twinfi"
-version = "0.13.3"
+version = "0.13.4"
 description = "Run a Wi-Fi hotspot on Linux while staying connected to Wi-Fi (AP+STA)"
 readme = "README.md"
 requires-python = ">=3.10"
