@@ -57,7 +57,7 @@ import gi  # noqa: E402
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
 from twinfi_gui import compat  # noqa: E402
 
@@ -68,7 +68,7 @@ if gi.version_info < (3, 44, 0):
     SCREENSHOTS["enabled"] = False
 from twinfi_gui.app import AppTray  # noqa: E402
 from twinfi_gui.backend import Result  # noqa: E402
-from twinfi_gui.helpers import APP_ID  # noqa: E402
+from twinfi_gui.helpers import APP_ID, TRAY_ICONS  # noqa: E402
 from twinfi_gui.tray import register_object  # noqa: E402
 from twinfi_gui.window import MissingTwinfiWindow, TwinfiWindow  # noqa: E402
 
@@ -242,6 +242,46 @@ def fake_tray_watcher(bus: Gio.DBusConnection) -> list:
     register_object(bus, "/StatusNotifierWatcher", iface, call)
     Gio.bus_own_name_on_connection(bus, "org.kde.StatusNotifierWatcher", Gio.BusNameOwnerFlags.NONE, None, None)
     return items
+
+
+def visible_share(texture, rgb) -> float:
+    """Share of a texture's opaque pixels close to ``rgb`` (0 when nothing is drawn)."""
+    gi.require_version("GdkPixbuf", "2.0")
+    from gi.repository import GdkPixbuf
+
+    loader = GdkPixbuf.PixbufLoader.new_with_type("png")
+    loader.write(texture.save_to_png_bytes().get_data())
+    loader.close()
+    pixbuf = loader.get_pixbuf().add_alpha(False, 0, 0, 0)
+    pixels, stride = pixbuf.get_pixels(), pixbuf.get_rowstride()
+    seen = close = 0
+    for y in range(pixbuf.get_height()):
+        for x in range(pixbuf.get_width()):
+            r, g, b, a = pixels[y * stride + x * 4 : y * stride + x * 4 + 4]
+            if a > 128:
+                seen += 1
+                close += all(abs(c - want) < 60 for c, want in zip((r, g, b), rgb, strict=True))
+    return close / seen if seen > 100 else 0.0
+
+
+def check_tray_icons() -> None:
+    """Each tray icon takes the colour GTK asks for, as on a light or dark panel."""
+    if not SCREENSHOTS["enabled"]:
+        return  # rendering needs PyGObject >= 3.44
+    host = Gtk.Window()
+    host.present()
+    pump(0.3)
+    red = Gdk.RGBA()
+    red.parse("#ff0000")
+    for name in TRAY_ICONS:
+        path = compat.ICONS_DIR / "hicolor/symbolic/apps" / f"{name}.svg"
+        paintable = Gtk.IconPaintable.new_for_file(Gio.File.new_for_path(str(path)), 64, 1)
+        snapshot = Gtk.Snapshot.new()
+        paintable.snapshot_symbolic(snapshot, 64, 64, [red])
+        texture = host.get_renderer().render_texture(snapshot.to_node(), None)
+        share = visible_share(texture, (255, 0, 0))
+        assert share > 0.95, f"{name}: only {share:.0%} of the icon took the panel colour"
+    host.close()
 
 
 def check_tray(app: Adw.Application) -> None:
@@ -418,6 +458,8 @@ def run(app: Adw.Application, out: Path) -> None:
 
     print("system tray", flush=True)
     check_tray(app)
+    print("tray icons", flush=True)
+    check_tray_icons()
 
     missing = MissingTwinfiWindow(app, "/usr/bin/twinfi")
     missing.present()

@@ -87,6 +87,27 @@ class HelperTests(unittest.TestCase):
         for name in (on, off, problem):
             self.assertTrue((GUI_DIR / "data/icons/hicolor/symbolic/apps" / f"{name}.svg").is_file(), name)
 
+    def test_tray_icons_follow_the_panel_text_colour(self):
+        # Plasma recolours an icon by replacing its "current-color-scheme" stylesheet;
+        # GTK recolours the fills of -symbolic icons. Both need currentColor fills only.
+        import xml.etree.ElementTree as ET
+
+        ns = "{http://www.w3.org/2000/svg}"
+        for name in helpers.TRAY_ICONS:
+            path = GUI_DIR / "data/icons/hicolor/symbolic/apps" / f"{name}.svg"
+            root = ET.parse(path).getroot()
+            styles = [s for s in root.iter(f"{ns}style") if s.get("id") == "current-color-scheme"]
+            self.assertEqual(len(styles), 1, name)
+            self.assertRegex(styles[0].text or "", r"\.ColorScheme-Text\s*\{\s*color:\s*#[0-9a-fA-F]{6};?\s*\}", name)
+            shapes = [e for e in root.iter() if e.tag[len(ns) :] in ("path", "circle", "rect", "ellipse", "polygon")]
+            self.assertTrue(shapes, name)
+            for shape in shapes:
+                self.assertEqual(shape.get("class"), "ColorScheme-Text", (name, shape.attrib))
+                self.assertEqual(shape.get("fill"), "currentColor", (name, shape.attrib))
+                self.assertIsNone(shape.get("stroke"), (name, shape.attrib))  # outlines only: fills recolour everywhere
+            outside = path.read_text().replace(styles[0].text or "", "")
+            self.assertNotRegex(outside, r"#[0-9a-fA-F]{3,6}\b", name)
+
     def test_tray_status(self):
         on, off = {"hotspot": {"ssid": "S"}}, {"hotspot": None, "config": {}}
         self.assertEqual(helpers.tray_status(off), "Active")  # shown unless asked otherwise
