@@ -13,7 +13,16 @@ from twinfi_cli import __version__  # noqa: E402
 
 from .backend import TwinfiBackend  # noqa: E402
 from .compat import ICONS_DIR, ensure_font_dpi, register_bundled_icons, show_about  # noqa: E402
-from .helpers import APP_ID, TRAY_ICONS, band_change, band_label, load_gui_prefs, tray_state, tray_status  # noqa: E402
+from .helpers import (  # noqa: E402
+    APP_ID,
+    TRAY_ICONS,
+    band_change,
+    band_label,
+    load_gui_prefs,
+    tray_icons_installed,
+    tray_state,
+    tray_status,
+)
 from .tray import TrayIcon, svg_pixmaps  # noqa: E402
 from .window import MissingTwinfiWindow, TwinfiWindow  # noqa: E402
 
@@ -26,8 +35,9 @@ class AppTray:
     def __init__(self, app: "TwinfiApp", window: TwinfiWindow):
         self.app, self.window = app, window
         self.hide_when_off = bool(load_gui_prefs().get("tray_hide_when_off"))
-        # Fallback pictures for trays that can't look up the icon by name:
-        # the same icons in a grey that reads on light and dark panels.
+        # Pictures for trays that can't look up the icon by name, and the only
+        # picture when the icons aren't installed in the system theme: the same
+        # icons in a grey that reads on light and dark panels.
         self.pixmaps = {}
         for name in TRAY_ICONS:
             try:
@@ -41,7 +51,7 @@ class AppTray:
             window.toggle_visible,
             self._on_menu,
             app.on_tray_change,
-            icon_theme_path=str(ICONS_DIR),
+            use_icon_names=tray_icons_installed(),
         )
         window.tray = self
         self.update({}, False)

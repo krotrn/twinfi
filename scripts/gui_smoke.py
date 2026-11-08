@@ -68,7 +68,7 @@ if gi.version_info < (3, 44, 0):
     SCREENSHOTS["enabled"] = False
 from twinfi_gui.app import AppTray  # noqa: E402
 from twinfi_gui.backend import Result  # noqa: E402
-from twinfi_gui.helpers import APP_ID, TRAY_ICONS  # noqa: E402
+from twinfi_gui.helpers import APP_ID, TRAY_ICONS, tray_icons_installed  # noqa: E402
 from twinfi_gui.tray import register_object  # noqa: E402
 from twinfi_gui.window import MissingTwinfiWindow, TwinfiWindow  # noqa: E402
 
@@ -383,10 +383,17 @@ def check_tray(app: Adw.Application) -> None:
         args = GLib.Variant("(ss)", ("org.kde.StatusNotifierItem", name))
         return call("/StatusNotifierItem", "org.freedesktop.DBus.Properties", "Get", args)[0]
 
-    # The app's own icon, which a panel can find even when running from source.
+    # The app's own icon: by name when it's installed in the system theme, and
+    # always as pixmaps. No IconThemePath: Quickshell reads it as a flat folder.
     tray.set_hide_when_off(False)  # whatever this user's saved setting is
-    assert item_prop("IconName") == f"{APP_ID}-symbolic", item_prop("IconName")
-    assert item_prop("IconThemePath") == str(compat.ICONS_DIR), item_prop("IconThemePath")
+    named = tray_icons_installed()
+
+    def shown(name):
+        return name if named else ""
+
+    assert item_prop("IconName") == shown(f"{APP_ID}-symbolic"), item_prop("IconName")
+    assert item_prop("IconThemePath") == "", item_prop("IconThemePath")
+    assert item_prop("IconPixmap"), "no pixmaps"
     assert item_prop("Status") == "Active"
     statuses = []
     bus.signal_subscribe(
@@ -403,7 +410,8 @@ def check_tray(app: Adw.Application) -> None:
     tray.set_hide_when_off(True)
     pump(0.2)
     assert item_prop("Status") == "Passive" and statuses == ["Passive"], statuses
-    assert item_prop("IconName") == f"{APP_ID}-off-symbolic", item_prop("IconName")
+    assert item_prop("IconName") == shown(f"{APP_ID}-off-symbolic"), item_prop("IconName")
+    assert tray.icon.icon == f"{APP_ID}-off-symbolic", tray.icon.icon
     tray.set_hide_when_off(False)
     win.data = saved
     win.update_tray()

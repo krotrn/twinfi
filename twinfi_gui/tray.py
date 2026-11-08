@@ -101,8 +101,8 @@ MENU_XML = """<node>
 def svg_pixmaps(svg: bytes, sizes=(16, 22, 24, 32, 48)) -> list:
     """``IconPixmap`` renderings of ``svg`` (ARGB32, network byte order).
 
-    The fallback for trays whose icon theme lacks ``IconName``; [] when SVG
-    can't be rendered here.
+    The fallback for trays whose icon theme lacks ``IconName``, and the only
+    picture when the icons aren't installed; [] when SVG can't be rendered here.
     """
     try:
         import gi
@@ -158,6 +158,11 @@ class TrayIcon:
     """One tray icon. ``on_activate(token)`` runs on a click on the icon (``token``
     is the xdg-activation token for Wayland, or None); ``on_menu(key)`` on a menu
     item; ``on_change(available)`` whenever a tray starts or stops showing it.
+
+    With ``use_icon_names`` False, ``IconName`` stays "" and the panel draws the
+    pixmaps. ``IconThemePath`` is always "": Quickshell reads it as a flat
+    folder of icons, not a theme tree, and then shows a "missing icon" picture
+    instead of falling back to the pixmaps or the system theme.
     """
 
     def __init__(
@@ -167,11 +172,12 @@ class TrayIcon:
         on_activate: Callable[[Optional[str]], None],
         on_menu: Callable[[str], None],
         on_change: Optional[Callable[[bool], None]] = None,
-        icon_theme_path: str = "",
+        use_icon_names: bool = True,
     ):
-        self.item_id, self.title, self.icon_theme_path = item_id, title, icon_theme_path
+        self.item_id, self.title, self.use_icon_names = item_id, title, use_icon_names
         self.on_activate, self.on_menu, self.on_change = on_activate, on_menu, on_change
-        self.icon_name = ""
+        self.icon = ""  # the icon shown, whether or not its name is published
+        self.icon_name = ""  # the published IconName: "" when the panel can't look it up
         self.pixmaps: list = []
         self.status = "Active"
         self.tooltip = ("", "")
@@ -207,17 +213,19 @@ class TrayIcon:
     # ── public ────────────────────────────────────────────────────────────────
 
     def update(
-        self, icon_name: str, title: str, body: str, items: List[MenuItem], pixmaps: list = (), status: str = "Active"
+        self, icon: str, title: str, body: str, items: List[MenuItem], pixmaps: list = (), status: str = "Active"
     ) -> None:
         """Show a new state; emits only the change signals that apply.
 
+        ``icon`` is the icon's name; it is published only with ``use_icon_names``.
         ``status`` is "Active", or "Passive" to let the panel hide the icon.
         """
         if status != self.status:
             self.status = status
             self._emit_item("NewStatus", GLib.Variant("(s)", (status,)))
-        if icon_name != self.icon_name:
-            self.icon_name, self.pixmaps = icon_name, list(pixmaps)
+        if icon != self.icon:
+            self.icon, self.pixmaps = icon, list(pixmaps)
+            self.icon_name = icon if self.use_icon_names else ""
             self._emit_item("NewIcon")
         if (title, body) != self.tooltip:
             self.tooltip = (title, body)
@@ -306,7 +314,7 @@ class TrayIcon:
             "Status": v("s", self.status),
             "WindowId": v("i", 0),
             "IconName": v("s", self.icon_name),
-            "IconThemePath": v("s", self.icon_theme_path),
+            "IconThemePath": v("s", ""),
             "IconPixmap": v("a(iiay)", self.pixmaps),
             "OverlayIconName": v("s", ""),
             "OverlayIconPixmap": v("a(iiay)", []),

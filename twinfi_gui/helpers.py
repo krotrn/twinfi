@@ -16,6 +16,23 @@ TRAY_ICON_ERROR = f"{APP_ID}-error-symbolic"
 TRAY_ICONS = (TRAY_ICON_ON, TRAY_ICON_OFF, TRAY_ICON_ERROR)
 POLL_INTERVAL = 5  # seconds between status refreshes
 
+
+def tray_icons_installed(environ: Optional[dict] = None) -> bool:
+    """True when the system icon theme has the tray icons.
+
+    Looks in ``$XDG_DATA_HOME/icons`` and each ``$XDG_DATA_DIRS`` entry's
+    ``icons`` for ``hicolor/symbolic/apps/<name>.svg``, where the packages
+    install them. Runs from source or pip don't have them there, and the tray
+    must then send pixmaps only: an icon name the panel can't find shows as a
+    "missing icon" picture on some panels.
+    """
+    env = os.environ if environ is None else environ
+    data_home = env.get("XDG_DATA_HOME") or str(Path.home() / ".local/share")
+    data_dirs = (env.get("XDG_DATA_DIRS") or "/usr/local/share:/usr/share").split(":")
+    roots = [Path(d) / "icons" for d in [data_home, *data_dirs] if d and os.path.isabs(d)]
+    return all(any((root / "hicolor/symbolic/apps" / f"{name}.svg").is_file() for root in roots) for name in TRAY_ICONS)
+
+
 BANDS = [("bg", "2.4 GHz"), ("a", "5 GHz")]
 # The ``method`` setting: (value, label, what it means).
 METHODS = [

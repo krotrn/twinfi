@@ -267,8 +267,12 @@ The icon is the app's own (`com.github.twinfi.Gtk-symbolic`, with `-off-` and
 `-error-` variants) rather than a theme Wi-Fi icon, which would look like the
 network applet's. The SVGs are filled outlines in `currentColor` under a
 `current-color-scheme` stylesheet, so both GTK and Plasma's KIconLoader
-recolour them to the panel's text colour; `IconThemePath` points at the
-bundled copies for runs from source. `helpers.tray_status` reports
+recolour them to the panel's text colour. `IconThemePath` is always empty:
+Quickshell reads it as a flat folder rather than a theme tree and shows a
+"missing icon" picture. The icon goes out by name only when
+`helpers.tray_icons_installed()` finds it in the system theme (a package
+install); runs from source send just `IconPixmap`, which every tray draws.
+`helpers.tray_status` reports
 `Passive` while the hotspot is off if the user turned on *Hide tray icon
 while the hotspot is off* (stored per user in `$XDG_CONFIG_HOME/twinfi/gui.json`),
 which lets the panel hide the item; it stays `Active` while busy or when the
