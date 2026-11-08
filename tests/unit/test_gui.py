@@ -131,8 +131,12 @@ class HelperTests(unittest.TestCase):
 
     def test_packages_install_every_bundled_icon(self):
         root = GUI_DIR.parent
+        packagings = ("debian/twinfi.install", "packaging/arch/PKGBUILD")
+        if not all((root / p).is_file() for p in packagings):
+            # Distribution package builds (e.g. Debian's pybuild) copy only the package and tests.
+            self.skipTest("packaging files are not part of this tree")
         icons = sorted((GUI_DIR / "data/icons/hicolor").glob("*/apps/*.svg"))
-        for packaging in ("debian/twinfi.install", "packaging/arch/PKGBUILD"):
+        for packaging in packagings:
             text = (root / packaging).read_text()
             for icon in icons:
                 self.assertIn(str(icon.relative_to(root)), text, packaging)
