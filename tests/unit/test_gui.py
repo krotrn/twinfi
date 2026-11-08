@@ -412,5 +412,126 @@ class PortabilityTests(unittest.TestCase):
         self.assertEqual(root.find("releases/release").get("version"), __version__)
 
 
+def load_tray():
+    """twinfi_gui.tray, with a stand-in for PyGObject where it isn't installed."""
+    try:
+        import gi  # noqa: F401
+    except ImportError:
+        pass
+    else:
+        from twinfi_gui import tray
+
+        return tray
+
+    class Variant:
+        def __init__(self, fmt, value):
+            self.fmt, self.value = fmt, value
+
+        def unpack(self):
+            return self.value
+
+    glib = types.SimpleNamespace(Variant=Variant, Error=type("Error", (Exception,), {}))
+    gio = types.SimpleNamespace(bus_get_sync=lambda *_: None, BusType=types.SimpleNamespace(SESSION=0))
+    gi = types.ModuleType("gi")
+    repository = types.ModuleType("gi.repository")
+    repository.GLib, repository.Gio = glib, gio
+    gi.repository = repository
+    with mock.patch.dict(sys.modules, {"gi": gi, "gi.repository": repository}):
+        sys.modules.pop("twinfi_gui.tray", None)
+        from twinfi_gui import tray
+    return tray
+
+
+class TrayIconTests(unittest.TestCase):
+    def setUp(self):
+        self.tray = load_tray()
+
+    def icon(self, use_icon_names):
+        """A TrayIcon with no session bus; emitted item signals go to self.signals."""
+        with mock.patch.object(self.tray.Gio, "bus_get_sync", side_effect=self.tray.GLib.Error()):
+            icon = self.tray.TrayIcon("twinfi", "Hotspot", print, print, use_icon_names=use_icon_names)
+        self.signals = []
+        icon._emit_item = lambda signal, params=None: self.signals.append(signal)
+        return icon
+
+    def prop(self, icon, name):
+        value = icon._item_props()[name].unpack()
+        if name == "IconPixmap":  # GLib unpacks "ay" as a list of ints
+            value = [(w, h, bytes(data)) for w, h, data in value]
+        return value
+
+    def test_icon_theme_path_is_never_sent(self):
+        # Quickshell reads IconThemePath as a flat folder, so a theme tree there
+        # shows a "missing icon" picture instead of the icon.
+        for use_icon_names in (True, False):
+            icon = self.icon(use_icon_names)
+            icon.update(helpers.TRAY_ICON_ON, "t", "b", [], [(1, 1, b"\0\0\0\0")])
+            self.assertEqual(self.prop(icon, "IconThemePath"), "")
+
+    def test_installed_icons_go_out_by_name_with_pixmaps(self):
+        icon = self.icon(True)
+        pixmaps = [(1, 1, b"\xff\0\0\0")]
+        icon.update(helpers.TRAY_ICON_ON, "t", "b", [], pixmaps)
+        self.assertEqual(self.prop(icon, "IconName"), helpers.TRAY_ICON_ON)
+        self.assertEqual(self.prop(icon, "IconPixmap"), pixmaps)
+
+    def test_without_installed_icons_only_pixmaps_go_out_and_changes_still_show(self):
+        icon = self.icon(False)
+        on, off = [(1, 1, b"\xff\0\0\0")], [(1, 1, b"\x80\0\0\0")]
+        icon.update(helpers.TRAY_ICON_ON, "t", "b", [], on)
+        self.assertEqual(self.signals.count("NewIcon"), 1)
+        self.assertEqual(self.prop(icon, "IconName"), "")
+        self.assertEqual(self.prop(icon, "IconPixmap"), on)
+        self.assertEqual(self.prop(icon, "ToolTip")[0], "")
+
+        icon.update(helpers.TRAY_ICON_OFF, "t", "b", [], off)
+        self.assertEqual(self.signals.count("NewIcon"), 2)
+        self.assertEqual(self.prop(icon, "IconName"), "")
+        self.assertEqual(self.prop(icon, "IconPixmap"), off)
+
+        icon.update(helpers.TRAY_ICON_OFF, "t", "b", [], off)  # same icon: no signal
+        self.assertEqual(self.signals.count("NewIcon"), 2)
+        icon.update(helpers.TRAY_ICON_ERROR, "t", "b", [], on)
+        self.assertEqual(self.signals.count("NewIcon"), 3)
+
+
+class TrayIconsInstalledTests(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+
+    def install(self, data_dir, names=helpers.TRAY_ICONS):
+        apps = self.root / data_dir / "icons/hicolor/symbolic/apps"
+        apps.mkdir(parents=True, exist_ok=True)
+        for name in names:
+            (apps / f"{name}.svg").write_text("<svg/>")
+
+    def installed(self, **env):
+        env.setdefault("XDG_DATA_HOME", str(self.root / "home"))
+        return helpers.tray_icons_installed(env)
+
+    def test_found_in_a_system_data_dir(self):
+        dirs = f"{self.root / 'a'}:{self.root / 'b'}"
+        self.assertFalse(self.installed(XDG_DATA_DIRS=dirs))
+        self.install("b")
+        self.assertTrue(self.installed(XDG_DATA_DIRS=dirs))
+
+    def test_found_in_the_user_data_dir(self):
+        self.install("home")
+        self.assertTrue(self.installed(XDG_DATA_DIRS=str(self.root / "a")))
+        self.assertFalse(self.installed(XDG_DATA_HOME=str(self.root / "other"), XDG_DATA_DIRS=str(self.root / "a")))
+
+    def test_every_tray_icon_is_needed(self):
+        # An older install without the off and error icons would show a missing icon.
+        self.install("a", [helpers.TRAY_ICON_ON])
+        self.assertFalse(self.installed(XDG_DATA_DIRS=str(self.root / "a")))
+
+    def test_default_dirs_and_relative_entries(self):
+        with mock.patch.object(Path, "is_file", autospec=True, side_effect=lambda p: str(p).startswith("/usr/share/")):
+            self.assertTrue(helpers.tray_icons_installed({"XDG_DATA_HOME": str(self.root)}))
+            self.assertFalse(helpers.tray_icons_installed({"XDG_DATA_DIRS": "relative/share"}))
+
+
 if __name__ == "__main__":
     unittest.main()
