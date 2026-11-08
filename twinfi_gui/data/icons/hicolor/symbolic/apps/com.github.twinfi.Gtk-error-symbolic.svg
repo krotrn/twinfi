@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-  <g fill="none" stroke="#2e3436" stroke-linecap="round" stroke-width="1.5">
-    <path d="M1 9.2a7 7 0 0 1 9.8 0"/>
-    <path d="M3 11.4a4 4 0 0 1 5.8 0"/>
-  </g>
-  <circle cx="5.9" cy="14" r="1.3" fill="#2e3436"/>
-  <path d="M13 1.8v3.4" fill="none" stroke="#2e3436" stroke-width="1.6" stroke-linecap="round"/>
-  <circle cx="13" cy="7.6" r="0.95" fill="#2e3436"/>
+  <style id="current-color-scheme" type="text/css">.ColorScheme-Text { color:#2e3436; }</style>
+  <!-- no status: the share arrow becomes a warning mark -->
+  <path class="ColorScheme-Text" fill="currentColor" d="M0.48 8.61A7.75 7.75 0 0 1 11.32 8.61A0.75 0.75 0 0 1 10.27 9.68A6.25 6.25 0 0 0 1.53 9.68A0.75 0.75 0 0 1 0.48 8.61Z"/>
+  <path class="ColorScheme-Text" fill="currentColor" d="M2.45 10.88A4.75 4.75 0 0 1 9.35 10.88A0.75 0.75 0 0 1 8.26 11.91A3.25 3.25 0 0 0 3.54 11.91A0.75 0.75 0 0 1 2.45 10.88Z"/>
+  <circle class="ColorScheme-Text" fill="currentColor" cx="5.9" cy="14" r="1.3"/>
+  <path class="ColorScheme-Text" fill="currentColor" d="M12.2 1.8L12.2 5.2A0.8 0.8 0 0 0 13.8 5.2L13.8 1.8A0.8 0.8 0 0 0 12.2 1.8Z"/>
+  <circle class="ColorScheme-Text" fill="currentColor" cx="13" cy="7.6" r="0.95"/>
 </svg>
