@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.13.4] - 2026-11-08
+
 ### Fixed
 
 - The tray icon shows in Quickshell-based shells (Noctalia, Caelestia,
