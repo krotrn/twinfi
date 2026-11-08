@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.13.3] - 2026-11-08
+
 ### Added
 
 - *Hide tray icon while the hotspot is off* in Settings → Startup. KDE
