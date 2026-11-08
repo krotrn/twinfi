@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- The tray icon shows in Quickshell-based shells (Noctalia, Caelestia,
+  DankMaterialShell, end-4 and others). They showed a magenta-and-black
+  "missing icon" picture instead: twinfi told the tray to look for its icons
+  in a folder that Quickshell reads differently. twinfi now sends the icon by
+  name only when it's installed in the system icon theme, as the packages do,
+  and otherwise sends the picture itself, which every tray can draw.
+
 ## [0.13.3] - 2026-11-08
 
 ### Added
