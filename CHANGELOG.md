@@ -6,6 +6,23 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- *Hide tray icon while the hotspot is off* in Settings → Startup. KDE
+  Plasma then moves the icon into its hidden icons until the hotspot starts.
+  It's off by default, because waybar and some other bars hide such icons
+  completely.
+
+### Fixed
+
+- The tray icon no longer looks like the network applet's Wi-Fi icon. It
+  showed the theme's Wi-Fi icons, so with Wi-Fi off it looked like a
+  full-signal connection. It now shows twinfi's own icon: faded and struck
+  through while the hotspot is off, and with a "!" when twinfi can't report
+  its status.
+- The tray icon follows the panel's text colour on KDE Plasma. On a dark
+  panel it was drawn dark grey and was hard to see.
+
 ## [0.13.2] - 2026-10-14
 
 ### Fixed
