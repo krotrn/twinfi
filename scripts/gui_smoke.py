@@ -68,6 +68,7 @@ if gi.version_info < (3, 44, 0):
     SCREENSHOTS["enabled"] = False
 from twinfi_gui.app import AppTray  # noqa: E402
 from twinfi_gui.backend import Result  # noqa: E402
+from twinfi_gui.helpers import APP_ID  # noqa: E402
 from twinfi_gui.tray import register_object  # noqa: E402
 from twinfi_gui.window import MissingTwinfiWindow, TwinfiWindow  # noqa: E402
 
@@ -292,6 +293,38 @@ def check_tray(app: Adw.Application) -> None:
     _root, _props, children = call(
         "/MenuBar", "com.canonical.dbusmenu", "GetLayout", GLib.Variant("(iias)", (0, -1, []))
     )[1]
+
+    def item_prop(name):
+        args = GLib.Variant("(ss)", ("org.kde.StatusNotifierItem", name))
+        return call("/StatusNotifierItem", "org.freedesktop.DBus.Properties", "Get", args)[0]
+
+    # The app's own icon, which a panel can find even when running from source.
+    tray.set_hide_when_off(False)  # whatever this user's saved setting is
+    assert item_prop("IconName") == f"{APP_ID}-symbolic", item_prop("IconName")
+    assert item_prop("IconThemePath") == str(compat.ICONS_DIR), item_prop("IconThemePath")
+    assert item_prop("Status") == "Active"
+    statuses = []
+    bus.signal_subscribe(
+        tray.icon.name,
+        "org.kde.StatusNotifierItem",
+        "NewStatus",
+        "/StatusNotifierItem",
+        None,
+        0,
+        lambda *a: statuses.append(a[-1].unpack()[0]),
+    )
+    saved = win.data
+    win.data = {**saved, "hotspot": None}
+    tray.set_hide_when_off(True)
+    pump(0.2)
+    assert item_prop("Status") == "Passive" and statuses == ["Passive"], statuses
+    assert item_prop("IconName") == f"{APP_ID}-off-symbolic", item_prop("IconName")
+    tray.set_hide_when_off(False)
+    win.data = saved
+    win.update_tray()
+    pump(0.2)
+    assert item_prop("Status") == "Active" and statuses == ["Passive", "Active"], statuses
+
     labels = {props.get("label"): item_id for item_id, props, _ in children if "label" in props}
     assert "Stop Hotspot" in labels and "Quit" in labels, labels
     submenus = {props.get("label"): sub for _, props, sub in children if sub}

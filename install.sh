@@ -37,6 +37,8 @@ uninstall() {
           /usr/share/metainfo/com.github.twinfi.Gtk.metainfo.xml \
           /usr/share/icons/hicolor/scalable/apps/com.github.twinfi.Gtk.svg \
           /usr/share/icons/hicolor/symbolic/apps/com.github.twinfi.Gtk-symbolic.svg \
+          /usr/share/icons/hicolor/symbolic/apps/com.github.twinfi.Gtk-off-symbolic.svg \
+          /usr/share/icons/hicolor/symbolic/apps/com.github.twinfi.Gtk-error-symbolic.svg \
           /etc/bash_completion.d/twinfi \
           /usr/local/share/zsh/site-functions/_twinfi \
           /etc/fish/completions/twinfi.fish

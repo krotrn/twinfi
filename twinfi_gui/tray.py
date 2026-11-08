@@ -167,11 +167,13 @@ class TrayIcon:
         on_activate: Callable[[Optional[str]], None],
         on_menu: Callable[[str], None],
         on_change: Optional[Callable[[bool], None]] = None,
+        icon_theme_path: str = "",
     ):
-        self.item_id, self.title = item_id, title
+        self.item_id, self.title, self.icon_theme_path = item_id, title, icon_theme_path
         self.on_activate, self.on_menu, self.on_change = on_activate, on_menu, on_change
         self.icon_name = ""
         self.pixmaps: list = []
+        self.status = "Active"
         self.tooltip = ("", "")
         self.items: List[MenuItem] = []
         self._nodes: Dict[int, Tuple[Optional[MenuItem], List[int]]] = {0: (None, [])}
@@ -204,8 +206,16 @@ class TrayIcon:
 
     # ── public ────────────────────────────────────────────────────────────────
 
-    def update(self, icon_name: str, title: str, body: str, items: List[MenuItem], pixmaps: list = ()) -> None:
-        """Show a new state; emits only the change signals that apply."""
+    def update(
+        self, icon_name: str, title: str, body: str, items: List[MenuItem], pixmaps: list = (), status: str = "Active"
+    ) -> None:
+        """Show a new state; emits only the change signals that apply.
+
+        ``status`` is "Active", or "Passive" to let the panel hide the icon.
+        """
+        if status != self.status:
+            self.status = status
+            self._emit_item("NewStatus", GLib.Variant("(s)", (status,)))
         if icon_name != self.icon_name:
             self.icon_name, self.pixmaps = icon_name, list(pixmaps)
             self._emit_item("NewIcon")
@@ -281,9 +291,9 @@ class TrayIcon:
         if self.bus is not None:
             self.bus.emit_signal(None, path, iface, signal, params)
 
-    def _emit_item(self, signal: str) -> None:
+    def _emit_item(self, signal: str, params: Optional[GLib.Variant] = None) -> None:
         for iface in ("org.kde.StatusNotifierItem", "org.freedesktop.StatusNotifierItem"):
-            self._emit(ITEM_PATH, iface, signal)
+            self._emit(ITEM_PATH, iface, signal, params)
 
     # ── org.kde.StatusNotifierItem ────────────────────────────────────────────
 
@@ -293,10 +303,10 @@ class TrayIcon:
             "Category": v("s", "Hardware"),
             "Id": v("s", self.item_id),
             "Title": v("s", self.title),
-            "Status": v("s", "Active"),
+            "Status": v("s", self.status),
             "WindowId": v("i", 0),
             "IconName": v("s", self.icon_name),
-            "IconThemePath": v("s", ""),
+            "IconThemePath": v("s", self.icon_theme_path),
             "IconPixmap": v("a(iiay)", self.pixmaps),
             "OverlayIconName": v("s", ""),
             "OverlayIconPixmap": v("a(iiay)", []),

@@ -12,7 +12,9 @@ from ..helpers import (
     capability_rows,
     channel_options,
     index_of,
+    load_gui_prefs,
     login_entry_path,
+    save_gui_prefs,
     set_login_start,
 )
 
@@ -88,6 +90,13 @@ class SettingsPage:
         self.login.set_active(login_entry_path().exists())
         self.login.connect("notify::active", self._on_login_start)
         startup.add(self.login_row)
+        self.tray_hide_row, self.tray_hide = switch_row(
+            "Hide tray icon while the hotspot is off",
+            "The panel may tuck it away; some, like waybar, hide it completely",
+        )
+        self.tray_hide.set_active(bool(load_gui_prefs().get("tray_hide_when_off")))
+        self.tray_hide.connect("notify::active", self._on_tray_hide)
+        startup.add(self.tray_hide_row)
         self.widget.add(startup)
 
         # ── hardware ──────────────────────────────────────────────────────────
@@ -233,6 +242,15 @@ class SettingsPage:
             set_login_start(switch.get_active())
         except OSError as exc:
             self.window.toast(f"Could not change the login setting: {exc.strerror or exc}")
+
+    def _on_tray_hide(self, switch, _pspec) -> None:
+        hide = switch.get_active()
+        try:
+            save_gui_prefs({**load_gui_prefs(), "tray_hide_when_off": hide})
+        except OSError as exc:
+            self.window.toast(f"Could not save the tray setting: {exc.strerror or exc}")
+        if self.window.tray is not None:
+            self.window.tray.set_hide_when_off(hide)
 
     def _run_text(self, args) -> None:
         self.usb_label.set_label("Working…")

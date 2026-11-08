@@ -13,7 +13,7 @@ from twinfi_cli import __version__  # noqa: E402
 
 from .backend import TwinfiBackend  # noqa: E402
 from .compat import ICONS_DIR, ensure_font_dpi, register_bundled_icons, show_about  # noqa: E402
-from .helpers import APP_ID, band_change, band_label, tray_state  # noqa: E402
+from .helpers import APP_ID, TRAY_ICONS, band_change, band_label, load_gui_prefs, tray_state, tray_status  # noqa: E402
 from .tray import TrayIcon, svg_pixmaps  # noqa: E402
 from .window import MissingTwinfiWindow, TwinfiWindow  # noqa: E402
 
@@ -25,16 +25,24 @@ class AppTray:
 
     def __init__(self, app: "TwinfiApp", window: TwinfiWindow):
         self.app, self.window = app, window
-        # Fallback pictures for trays whose icon theme lacks the status icons:
-        # the app's symbolic icon in a grey that reads on light and dark panels.
-        try:
-            svg = (ICONS_DIR / "hicolor/symbolic/apps" / f"{APP_ID}-symbolic.svg").read_text()
-        except OSError:
-            svg = ""
-        on = svg.replace("#2e3436", "#bebebe")
-        off = on.replace("<svg ", '<svg opacity="0.5" ', 1)
-        self.pixmaps = {True: svg_pixmaps(on.encode()) if svg else [], False: svg_pixmaps(off.encode()) if svg else []}
-        self.icon = TrayIcon("twinfi", "Hotspot (twinfi)", window.toggle_visible, self._on_menu, app.on_tray_change)
+        self.hide_when_off = bool(load_gui_prefs().get("tray_hide_when_off"))
+        # Fallback pictures for trays that can't look up the icon by name:
+        # the same icons in a grey that reads on light and dark panels.
+        self.pixmaps = {}
+        for name in TRAY_ICONS:
+            try:
+                svg = (ICONS_DIR / "hicolor/symbolic/apps" / f"{name}.svg").read_text()
+            except OSError:
+                svg = ""
+            self.pixmaps[name] = svg_pixmaps(svg.replace("#2e3436", "#bebebe").encode()) if svg else []
+        self.icon = TrayIcon(
+            "twinfi",
+            "Hotspot (twinfi)",
+            window.toggle_visible,
+            self._on_menu,
+            app.on_tray_change,
+            icon_theme_path=str(ICONS_DIR),
+        )
         window.tray = self
         self.update({}, False)
 
@@ -44,7 +52,13 @@ class AppTray:
 
     def update(self, data: dict, busy: bool) -> None:
         icon, title, body, items = tray_state(data, busy)
-        self.icon.update(icon, title, body, items, self.pixmaps[bool(data.get("hotspot"))])
+        status = tray_status(data, busy, self.hide_when_off)
+        self.icon.update(icon, title, body, items, self.pixmaps[icon], status)
+
+    def set_hide_when_off(self, hide: bool) -> None:
+        """Let the panel hide the icon while the hotspot is off (applies at once)."""
+        self.hide_when_off = hide
+        self.window.update_tray()
 
     def _on_menu(self, key: str) -> None:
         window = self.window

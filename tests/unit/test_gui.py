@@ -81,9 +81,10 @@ class HelperTests(unittest.TestCase):
         on = helpers.tray_state({"hotspot": {"ssid": "S"}})[0]
         off = helpers.tray_state({"hotspot": None, "config": {}})[0]
         self.assertEqual(on, "com.github.twinfi.Gtk-symbolic")
+        problem = helpers.tray_state({})[0]  # twinfi could not report a status
         self.assertEqual(off, "com.github.twinfi.Gtk-off-symbolic")
-        self.assertEqual(helpers.tray_state({})[0], off)
-        for name in (on, off):
+        self.assertEqual(problem, "com.github.twinfi.Gtk-error-symbolic")
+        for name in (on, off, problem):
             self.assertTrue((GUI_DIR / "data/icons/hicolor/symbolic/apps" / f"{name}.svg").is_file(), name)
 
     def test_tray_status(self):

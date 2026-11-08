@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 from pathlib import Path
 from typing import NamedTuple, Optional
 
 APP_ID = "com.github.twinfi.Gtk"
+# The tray shows the app's own icon: theme Wi-Fi icons look like the network applet's.
+TRAY_ICON_ON = f"{APP_ID}-symbolic"
+TRAY_ICON_OFF = f"{APP_ID}-off-symbolic"
+TRAY_ICON_ERROR = f"{APP_ID}-error-symbolic"
+TRAY_ICONS = (TRAY_ICON_ON, TRAY_ICON_OFF, TRAY_ICON_ERROR)
 POLL_INTERVAL = 5  # seconds between status refreshes
 
 BANDS = [("bg", "2.4 GHz"), ("a", "5 GHz")]
@@ -142,8 +148,9 @@ def tray_state(data: dict, busy: bool = False) -> tuple:
     off. Keys: "toggle", "share", "devices", "profile:<name>", "band:<band>",
     "autostart", "settings", "show", "quit".
     """
-    title, subtitle, icon = hero_text(data)
+    title, subtitle, _ = hero_text(data)
     hotspot = bool(data.get("hotspot"))
+    icon = TRAY_ICON_ERROR if not data else TRAY_ICON_ON if hotspot else TRAY_ICON_OFF
     config = data.get("config") or {}
     autostart = data.get("autostart") or {}
     if busy:
@@ -180,6 +187,17 @@ def tray_state(data: dict, busy: bool = False) -> tuple:
         MenuItem("quit", "Quit"),
     ]
     return icon, title, subtitle, items
+
+
+def tray_status(data: dict, busy: bool = False, hide_when_off: bool = False) -> str:
+    """StatusNotifierItem ``Status``: "Passive" lets the panel hide the icon.
+
+    Only while the hotspot is known to be off and nothing is in progress, so an
+    error or a pending change stays in view.
+    """
+    if hide_when_off and data and not data.get("hotspot") and not busy:
+        return "Passive"
+    return "Active"
 
 
 def band_change(config: dict, band: str) -> dict:
@@ -219,3 +237,25 @@ def set_login_start(enabled: bool, path: Optional[Path] = None) -> None:
         path.write_text(login_entry(), encoding="utf-8")
     elif path.exists():
         path.unlink()
+
+
+def gui_prefs_path(env=os.environ) -> Path:
+    """Per-user settings of the GTK app (the hotspot's own settings are system-wide)."""
+    config = env.get("XDG_CONFIG_HOME") or os.path.join(env.get("HOME") or os.path.expanduser("~"), ".config")
+    return Path(config) / "twinfi" / "gui.json"
+
+
+def load_gui_prefs(path: Optional[Path] = None) -> dict:
+    """The saved settings; {} when there are none or the file is unreadable."""
+    try:
+        prefs = json.loads((path or gui_prefs_path()).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return prefs if isinstance(prefs, dict) else {}
+
+
+def save_gui_prefs(prefs: dict, path: Optional[Path] = None) -> None:
+    """Write the settings (raises OSError)."""
+    path = path or gui_prefs_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(prefs, indent=2) + "\n", encoding="utf-8")
